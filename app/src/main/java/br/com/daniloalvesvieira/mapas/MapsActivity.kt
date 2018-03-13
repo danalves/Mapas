@@ -43,16 +43,19 @@ class MapsActivity : AppCompatActivity(),
 
     val REQUEST_GPS = 0
 
-    val INTERVAL = 1000 * 1
-    val FASTEST_INTERVAL = 1000 * 2
+    val INTERVAL = 1000 * 10
+    val FASTEST_INTERVAL = 1000 * 5
 
     lateinit var mLocationRequest: LocationRequest
 
     protected fun createLocationRequest() {
+        checkPermission()
+        LocationServices.FusedLocationApi.removeLocationUpdates(mGoogleApiClient, this);
         mLocationRequest = LocationRequest()
-        mLocationRequest.setInterval(INTERVAL.toLong())
+        mLocationRequest.interval = INTERVAL.toLong()
         mLocationRequest.setFastestInterval(FASTEST_INTERVAL.toLong())
         mLocationRequest.priority = LocationRequest.PRIORITY_HIGH_ACCURACY
+        LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, mLocationRequest, this)
     }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -75,9 +78,9 @@ class MapsActivity : AppCompatActivity(),
 
             if (address.isNotEmpty()) {
                 val location = address[0]
-                adicionarMarcador(location.latitude, location.longitude, location.locality)
+                adicionarMarcador(location.latitude, location.longitude, location.subAdminArea)
             } else {
-                var alert = AlertDialog.Builder(this).create()
+                val alert = AlertDialog.Builder(this).create()
                 alert.setTitle("Deu pau!")
                 alert.setMessage("Endereço não encontrado!")
 
@@ -121,7 +124,6 @@ class MapsActivity : AppCompatActivity(),
 
     @Synchronized fun callConnection() {
 
-        createLocationRequest()
         mGoogleApiClient = GoogleApiClient.Builder(this)
                 .addOnConnectionFailedListener(this)
                 .addConnectionCallbacks(this)
@@ -133,6 +135,8 @@ class MapsActivity : AppCompatActivity(),
 
     override fun onConnected(p0: Bundle?) {
         checkPermission()
+
+        createLocationRequest()
 
         val minhaLocalizacao = LocationServices
                 .FusedLocationApi
