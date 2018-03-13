@@ -28,18 +28,32 @@ import android.content.pm.PackageManager
 import android.support.v4.app.FragmentActivity
 import android.support.v4.content.ContextCompat
 import android.util.Log
+import com.google.android.gms.location.LocationListener
+import com.google.android.gms.location.LocationRequest
 
 
 class MapsActivity : AppCompatActivity(),
         OnMapReadyCallback,
         GoogleApiClient.ConnectionCallbacks,
-        GoogleApiClient.OnConnectionFailedListener {
+        GoogleApiClient.OnConnectionFailedListener,
+        LocationListener {
 
     private lateinit var mMap: GoogleMap
     private lateinit var mGoogleApiClient: GoogleApiClient
 
     val REQUEST_GPS = 0
 
+    val INTERVAL = 1000 * 1
+    val FASTEST_INTERVAL = 1000 * 2
+
+    lateinit var mLocationRequest: LocationRequest
+
+    protected fun createLocationRequest() {
+        mLocationRequest = LocationRequest()
+        mLocationRequest.setInterval(INTERVAL.toLong())
+        mLocationRequest.setFastestInterval(FASTEST_INTERVAL.toLong())
+        mLocationRequest.priority = LocationRequest.PRIORITY_HIGH_ACCURACY
+    }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_maps)
@@ -47,6 +61,8 @@ class MapsActivity : AppCompatActivity(),
         val mapFragment = supportFragmentManager
                 .findFragmentById(R.id.map) as SupportMapFragment
         mapFragment.getMapAsync(this)
+
+
 
         btPesquisar.setOnClickListener {
 
@@ -104,6 +120,8 @@ class MapsActivity : AppCompatActivity(),
     }
 
     @Synchronized fun callConnection() {
+
+        createLocationRequest()
         mGoogleApiClient = GoogleApiClient.Builder(this)
                 .addOnConnectionFailedListener(this)
                 .addConnectionCallbacks(this)
@@ -171,6 +189,12 @@ class MapsActivity : AppCompatActivity(),
                 return
             }
         }
+    }
+
+    override fun onLocationChanged(p0: Location?) {
+        mMap.clear()
+        adicionarMarcador(p0!!.latitude, p0!!.longitude, "Eu agora")
+
     }
 
 
